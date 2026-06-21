@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новости - АВИС</title>
+    <link rel="stylesheet" href="../CSS/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    .news-page { 
+        margin-top: 140px; 
+        padding: 60px 0; 
+        background: linear-gradient(135deg, var(--blue-main) 0%, var(--blue-dark) 100%); 
+        min-height: 80vh; 
+    }
+    .news-page-title { 
+        text-align: center; 
+        font-size: 48px; 
+        font-weight: 700; 
+        color: var(--pure-white); 
+        margin-bottom: 20px;
+    }
+    .news-page-subtitle { 
+        text-align: center; 
+        font-size: 18px; 
+        color: var(--pure-white); 
+        margin-bottom: 50px;
+    }
+    .news-filters { display: flex; justify-content: center; gap: 15px; margin-bottom: 50px; flex-wrap: wrap; }
+    .filter-btn { 
+        padding: 14px 32px; 
+        background: var(--pure-white); 
+        border: 2px solid var(--beige); 
+        border-radius: 30px; 
+        color: var(--blue-darker); 
+        font-size: 14px; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: all 0.5s ease; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px; 
+        box-shadow: 0 3px 10px rgba(18, 25, 43, 0.1); 
+    }
+    .filter-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(18, 25, 43, 0.2); }
+    .filter-btn.active { 
+        background: var(--orange); 
+        border-color: var(--orange); 
+        color: var(--blue-darker); 
+        box-shadow: 0 5px 20px rgba(221, 200, 132, 0.4); 
+    }
+    .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 35px; margin-bottom: 50px; }
+    .news-card { background: var(--pure-white); border-radius: 12px; overflow: hidden; box-shadow: 0 5px 25px rgba(18, 25, 43, 0.1); transition: all 0.5s ease; cursor: pointer; display: flex; flex-direction: column; }
+    .news-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(221, 200, 132, 0.3); }
+    .news-source-header { padding: 20px 25px; color: var(--pure-white); font-weight: 700; font-size: 16px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 12px; }
+    .news-source-header.ria { background: linear-gradient(135deg, #2d3a58 0%, #12192b 100%); }
+    .news-source-header.lenta { background: linear-gradient(135deg, #ddc884 0%, #ebae3e 100%); color: #12192b; }
+    .news-source-header.tass { background: linear-gradient(135deg, #4a65a8 0%, #2d3a58 100%); }
+    .news-source-icon { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.2); border-radius: 6px; font-size: 18px; }
+    .news-body { padding: 25px; flex-grow: 1; display: flex; flex-direction: column; }
+    .news-date { color: var(--orange-dark); font-size: 13px; font-weight: 600; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .news-title { font-size: 19px; font-weight: 600; line-height: 1.4; margin-bottom: 15px; color: var(--blue-darker); flex-grow: 1; }
+    .news-description { color: var(--text-light); font-size: 14px; line-height: 1.7; margin-bottom: 20px; }
+    .news-link { display: inline-flex; align-items: center; gap: 8px; color: var(--blue-main); font-weight: 600; font-size: 14px; text-decoration: none; transition: gap 0.5s ease, color 0.5s ease; margin-top: auto; }
+    .news-link:hover { gap: 12px; color: var(--orange-dark); }
+    .loading { text-align: center; padding: 80px 20px; grid-column: 1 / -1; }
+    .spinner { width: 60px; height: 60px; border: 5px solid var(--beige); border-top-color: var(--orange); border-radius: 50%; margin: 0 auto 25px; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { color: var(--pure-white); font-size: 18px; }
+    .news-error { text-align: center; padding: 60px 30px; grid-column: 1 / -1; background: var(--pure-white); border-radius: 12px; box-shadow: 0 5px 25px rgba(18, 25, 43, 0.1); border-left: 5px solid var(--orange); }
+    .news-error-icon { font-size: 64px; margin-bottom: 20px; }
+    .news-error h3 { color: var(--blue-darker); font-size: 24px; margin-bottom: 15px; }
+    .news-error p { color: var(--text-light); font-size: 16px; margin-bottom: 25px; }
+    .last-update { text-align: center; margin-top: 30px; color: var(--pure-white); font-size: 14px; font-style: italic; }
+    @media (max-width: 768px) {
+        .news-page-title { font-size: 32px; }
+        .news-filters { flex-direction: column; align-items: center; }
+        .filter-btn { width: 100%; max-width: 280px; }
+        .news-grid { grid-template-columns: 1fr; gap: 25px; }
+    }
+</style>
+</head>
+<body>
+
+    <header id="header">
+        <div class="header-top">
+            <div class="container">
+                <div class="header-content">
+                    <a href="index.html" class="logo">АВИС<span>.</span></a>
+                    <div class="header-contacts">
+                        <a href="tel:+74951234567" class="phone-link">📞 +7 (495) 123-45-67</a>
+                        <a href="mailto:info@avis-light.ru">✉️ info@avis-light.ru</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav>
+            <div class="container">
+                <ul class="nav-menu">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="news.html" class="active">Новости</a></li>
+                    <li><a href="index.html#trust">Нам доверяют</a></li>
+                    <li><a href="index.html#service">Сервис</a></li>
+                    <li><a href="index.html#contacts">Контакты</a></li>
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <main class="news-page">
+        <div class="container">
+            <h1 class="news-page-title">Последние новости</h1>
+            <p class="news-page-subtitle">Актуальные новости из мира экономики, политики и общества</p>
+            
+            <div class="news-filters">
+                <button class="filter-btn active" data-filter="all"><i class="fas fa-newspaper"></i> Все источники</button>
+                <button class="filter-btn" data-filter="ria"><i class="fas fa-landmark"></i> РИА Новости</button>
+                <button class="filter-btn" data-filter="lenta"><i class="fas fa-bullhorn"></i> Лента.ру</button>
+                <button class="filter-btn" data-filter="tass"><i class="fas fa-broadcast-tower"></i> ТАСС</button>
+            </div>
+            
+            <div class="news-grid" id="newsContainer">
+                <div class="loading"><div class="spinner"></div><p>Загрузка новостей...</p></div>
+            </div>
+            
+            <div class="last-update" id="lastUpdate"></div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section"><h4>О компании</h4><p>АВИС - российский производитель светотехнического оборудования полного цикла</p></div>
+                <div class="footer-section"><h4>Навигация</h4><a href="index.html">Главная</a><a href="news.html">Новости</a><a href="index.html#contacts">Контакты</a></div>
+                <div class="footer-section"><h4>Контакты</h4><p>📞 +7 (495) 123-45-67</p><p>✉️ info@avis-light.ru</p><p>📍 Москва, ул. Примерная, д. 1</p></div>
+            </div>
+            <div class="footer-bottom"><p>&copy; 2026 Компания АВИС. Все права защищены.</p></div>
+        </div>
+    </footer>
+
+    <script>
+        const RSS_FEEDS = {
+            ria: { name: 'РИА Новости', url: 'https://ria.ru/export/rss2/index.xml', icon: 'fas fa-landmark' },
+            lenta: { name: 'Лента.ру', url: 'https://lenta.ru/rss/news', icon: 'fas fa-bullhorn' },
+            tass: { name: 'ТАСС', url: 'https://tass.ru/rss/v2.xml', icon: 'fas fa-broadcast-tower' }
+        };
+        const NEWS_PER_SOURCE = 3;
+        let allNews = [];
+        let currentFilter = 'all';
+        let lastUpdateTime = null;
+
+        async function loadFeed(sourceKey, feedConfig) {
+            try {
+                const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedConfig.url)}`;
+                const response = await fetch(apiUrl);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const data = await response.json();
+                if (data.status !== 'ok') return [];
+                const items = (data.items || []).slice(0, NEWS_PER_SOURCE);
+                return items.map(item => ({
+                    title: item.title || 'Без заголовка',
+                    link: item.link || '#',
+                    pubDate: item.pubDate || new Date().toISOString(),
+                    description: cleanDescription(item.description),
+                    source: sourceKey,
+                    sourceName: feedConfig.name,
+                    sourceIcon: feedConfig.icon
+                }));
+            } catch (error) {
+                console.error(`Ошибка загрузки ${feedConfig.name}:`, error);
+                return [];
+            }
+        }
+
+        function cleanDescription(html) {
+            if (!html) return '';
+            let text = html.replace(/<[^>]*>/g, '');
+            text = text.replace(/\s+/g, ' ').trim();
+            if (text.length > 200) text = text.substring(0, 200).trim() + '...';
+            return text;
+        }
+
+        async function loadAllNews() {
+            const container = document.getElementById('newsContainer');
+            if (allNews.length === 0) {
+                container.innerHTML = '<div class="loading"><div class="spinner"></div><p>Загрузка новостей...</p></div>';
+            }
+            try {
+                const promises = Object.entries(RSS_FEEDS).map(([key, config]) => loadFeed(key, config));
+                const results = await Promise.all(promises);
+                allNews = results.flat();
+                if (allNews.length === 0) throw new Error('Не удалось загрузить новости');
+                allNews.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate));
+                lastUpdateTime = new Date();
+                updateLastUpdateTime();
+                displayNews(currentFilter);
+            } catch (error) {
+                console.error('Общая ошибка:', error);
+                if (allNews.length === 0) {
+                    container.innerHTML = '<div class="news-error"><div class="news-error-icon"><i class="fas fa-exclamation-triangle"></i></div><h3>Не удалось загрузить новости</h3><p>Проверьте подключение к интернету или попробуйте позже</p></div>';
+                }
+            }
+        }
+
+        function displayNews(filter) {
+            const container = document.getElementById('newsContainer');
+            const filteredNews = filter === 'all' ? allNews : allNews.filter(news => news.source === filter);
+            if (filteredNews.length === 0) {
+                container.innerHTML = '<div class="news-error"><div class="news-error-icon"><i class="fas fa-inbox"></i></div><h3>Нет новостей</h3><p>Новости из выбранного источника временно недоступны</p></div>';
+                return;
+            }
+            container.innerHTML = filteredNews.map(news => `
+                <article class="news-card" onclick="openNews('${news.link}')">
+                    <div class="news-source-header ${news.source}">
+                        <div class="news-source-icon"><i class="${news.sourceIcon}"></i></div>
+                        ${news.sourceName}
+                    </div>
+                    <div class="news-body">
+                        <div class="news-date">${formatDate(news.pubDate)}</div>
+                        <h3 class="news-title">${news.title}</h3>
+                        ${news.description ? `<p class="news-description">${news.description}</p>` : ''}
+                        <span class="news-link">Читать полностью <i class="fas fa-arrow-right"></i></span>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function openNews(url) { window.open(url, '_blank'); }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            if (diff < 60000) return 'Только что';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)} мин. назад`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)} ч. назад`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)} дн. назад`;
+            return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function updateLastUpdateTime() {
+            const lastUpdateEl = document.getElementById('lastUpdate');
+            if (lastUpdateTime && lastUpdateEl) {
+                const timeStr = lastUpdateTime.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+                lastUpdateEl.textContent = `Последнее обновление: ${timeStr}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllNews();
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    displayNews(currentFilter);
+                });
+            });
+            setInterval(loadAllNews, 3600000);
+        });
+    </script>
+</body>
+</html>
